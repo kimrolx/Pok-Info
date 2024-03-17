@@ -1,57 +1,102 @@
-import { useState, ChangeEvent } from 'react'
-import '../styles/HeroSection.css'
+import { ChangeEvent, useState } from "react";
+import styled, { css } from "styled-components";
+import { Pokemon, PokemonSpecies } from "../models/types";
+import PokemonDetails from "./PokemonDetails";
+
+const CenteredDiv = styled.div`
+    display: flex;
+    justify-content: center;
+    align-items: center;
+`
+
+const HorizontalAlignDiv = styled.div`
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    margin: 0;
+    padding: 20px 35px 35px 35px;
+`
+
+const TitleText = styled.h1`
+    font-size: 44px;
+`
+
+const FlexRow = styled.div`
+    display: flex;
+    flex-direction: row;
+`
+
+const TextFieldStyle = styled.div`
+    position: relative;
+    font-size: 20px;
+    margin: 20px 0px 20px 0px;
+    margin-right: 12px;
+`
+
+const InputFieldStyle = styled.input`
+    all: unset;
+    width: 20rem;
+    padding: 10px 0;
+    border-bottom: 2px solid #dedede;
+`
+
+const InputLabelStyle = styled.label<{ isActive?: boolean }>`
+    position: absolute;
+    bottom: 10px;
+    left: 0;
+    color: #999999;
+    pointer-events: none;
+    transition: all 0.3s ease;
+
+    ${({ isActive }) =>
+        isActive && css`
+            bottom: 100%;
+            font-size: 16px;
+            color: white;
+        `}
+`
+
+const Underline = styled.div`
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(to right, #EF363E, #CC5036);
+    scale: scale(0, 1);
+    transition: transform 0.3s ease-out;
+`
+
+const StyledButton = styled.button`
+    background: white;
+    border: 0;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 700;
+    color: black;
+    width: 8rem;
+    height: 40px;
+    cursor: pointer;
+    transition: 0.3s ease-in-out;
+
+    &:hover {
+        background: linear-gradient(#C93F32, #7D109D);
+        color: white;
+    }
+`
 
 const apiURL = 'https://pokeapi.co/api/v2/pokemon';
 const apiURLSpecies = 'https://pokeapi.co/api/v2/pokemon-species';
 
-interface Pokemon {
-    name: string;
-    height: number;
-    weight: number;
-    moves: {
-        move: {
-            name: string;
-        };
-    }[];
-    abilities: {
-        ability: {
-            name: string;
-        }
-    }[];
-    sprites: {
-        front_default: string;
-        front_shiny: string;
-    }
-    types: {
-        type: {
-            name: string;
-        }
-    }[];
-}
-
-interface PokemonSpecies {
-    evolves_from_species: {
-        name: string;
-        url: string;
-    };
-    flavor_text_entries: {
-        flavor_text: string;
-        language: {
-            name: string;
-        }
-        version: {
-            name: string;
-        }
-    }[];
-}
-
 export default function HeroSection() {
-
-    const [searchTerm, setSearchTerm] = useState('');
-    // const [evolveFrom, setEvolveFrom] = useState<Pokemon | null>(null);
-    // const [evolveTo, setEvolveTo] = useState<Pokemon | null>(null);
     const [pokemonData, setPokemonData] = useState<Pokemon | null>(null);
     const [pokemonDataSpecies, setPokemonDataSpecies] = useState<PokemonSpecies | null>(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [isFocused, setIsFocused] = useState(false);
+    const isLabelActive = isFocused || searchTerm.length > 0;
+
+    const handleFocus = () => setIsFocused(true);
+    const handleBlur = () => setIsFocused(false);
 
     const searchPokemon = async () => {
         try {
@@ -68,8 +113,6 @@ export default function HeroSection() {
         }
     }
 
-    const englishRedFlavorText = pokemonDataSpecies?.flavor_text_entries.find(entry => entry.language.name === 'en');
-
     const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
         setSearchTerm(event.target.value)
     }
@@ -79,67 +122,33 @@ export default function HeroSection() {
     }
 
     return (
-        <div className="parent">
-            <div className="hero">
-                <div className="text">
-                    <div className="text-wrapper">
-                        <h1>Who's that Pokémon?</h1>
+        <HorizontalAlignDiv >
+            <TitleText> Who's that Pokémon? </TitleText>
 
-                        <div className="row-wrapper">
-                            <div className="input-wrapper">
-                                <input
-                                    onChange={handleChange}
-                                    value={searchTerm}
-                                    type="text"
-                                    id='pokemon-name'
-                                    required
-                                />
-                                <label htmlFor="pokemon-name">Enter Pokémon Name</label>
-                                <div className="underline"></div>
-                            </div>
+            <FlexRow>
+                <TextFieldStyle>
+                    <InputFieldStyle
+                        onChange={handleChange}
+                        onFocus={handleFocus}
+                        onBlur={handleBlur}
+                        value={searchTerm}
+                        type="text"
+                        id="pokemon-name"
+                        required
+                    />
+                    <InputLabelStyle htmlFor="pokemon-name" isActive={isLabelActive}>
+                        Enter Pokémon Name
+                    </InputLabelStyle>
 
-                            <div className="button-wrapper">
-                                <button onClick={handleClick}>
-                                    Submit
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div className="pokemon">
-                    {pokemonData && (
-                        <div className='pokemon-info'>
-                            <div className="info">
-                                <h2>{pokemonData.name}</h2>
-                                <h3>{englishRedFlavorText ? englishRedFlavorText.flavor_text : 'Flavor text not available.'}</h3>
-                                <div className="details-wrapper">
-                                    <h3 className="abilities">Abilities: {pokemonData.abilities.map((ability) => ability.ability.name).join(', ')}</h3>
-                                    {/* <h3>Moves: {pokemonData.moves.map((moves) => moves.move.name).join(', ')}</h3> */}
-                                </div>
-                            </div>
-                            <div className="info-details">
-                                <div className="image-wrapper">
-                                    <img
-                                        src={pokemonData.sprites.front_default}
-                                        alt={`${pokemonData.name} sprite`}
-                                    />
-                                    <img
-                                        src={pokemonData.sprites.front_shiny}
-                                        alt={`${pokemonData.name} sprite`}
-                                    />
-                                </div>
-                                <div className="type-wrapper">
-                                    <h3>{pokemonData.types.map((type) => type.type.name).join(' ')}</h3>
-                                </div>
-                                <div className="hw-wrapper">
-                                    <h3>Height: {pokemonData.height / 10} m</h3>
-                                    <h3>Weight: {pokemonData.weight / 10} kg</h3>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </div>
-        </div>
-    )
+                    <Underline style={{ transform: isFocused ? 'scale(1, 1)' : 'scale(0, 1)' }} />
+                </TextFieldStyle>
+                <CenteredDiv>
+                    <StyledButton onClick={handleClick}> Submit </StyledButton>
+                </CenteredDiv>
+            </FlexRow>
+            {pokemonData && (
+                <PokemonDetails pokemonData={pokemonData} pokemonDataSpecies={pokemonDataSpecies} />
+            )}
+        </HorizontalAlignDiv>
+    );
 }
